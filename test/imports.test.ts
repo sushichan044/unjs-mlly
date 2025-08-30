@@ -398,6 +398,50 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
   "// import.meta": [],
   "/* import.meta */": [],
   '"import.meta.url"': [],
+  // Block comments between tokens
+  "import.meta/* comment */.url": [
+    {
+      type: "meta",
+      code: "import.meta/* comment */.url",
+      start: 0,
+      end: 28,
+      chain: [{ name: "url", type: "property" }],
+    },
+  ],
+  "import.meta./* comment */env.NODE_ENV": [
+    {
+      type: "meta",
+      code: "import.meta./* comment */env.NODE_ENV",
+      start: 0,
+      end: 37,
+      chain: [
+        { name: "env", type: "property" },
+        { name: "NODE_ENV", type: "property" },
+      ],
+    },
+  ],
+  // $ in identifier names
+  "import.meta.$store": [
+    {
+      type: "meta",
+      code: "import.meta.$store",
+      start: 0,
+      end: 18,
+      chain: [{ name: "$store", type: "property" }],
+    },
+  ],
+  "import.meta.env.$NODE_ENV": [
+    {
+      type: "meta",
+      code: "import.meta.env.$NODE_ENV",
+      start: 0,
+      end: 25,
+      chain: [
+        { name: "env", type: "property" },
+        { name: "$NODE_ENV", type: "property" },
+      ],
+    },
+  ],
 };
 
 // multiline chain

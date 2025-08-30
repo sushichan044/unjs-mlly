@@ -318,12 +318,12 @@ export const DYNAMIC_IMPORT_RE =
 
 /**
  * Regular expression to match import.meta expressions in JavaScript/TypeScript code.
- * Supports multiline property access with whitespace between dots and property names.
- * Captures the entire chain but stops at first method call in post-processing.
- * @example `import.meta.url`, `import.meta.env`, `import.meta.resolve()`
+ * Supports multiline property access with whitespace and optional block comments between dots and property names.
+ * Captures the full property chain (including nested accesses and calls) while allowing optional block comments between tokens.
+ * @example `import.meta.url`, `import.meta.env`, `import.meta.resolve()`, `import . meta . url` with block comments
  */
 export const IMPORT_META_RE =
-  /\bimport\.meta(?<chain>(?:(?:\s*\.\s*\w+(?:\s*\((?:[^()]+|\([^)]*\))*\))?)+))/gm;
+  /\bimport\.meta(?<chain>(?:(?:\s*(?:\/\*[\s\S]*?\*\/)?\.\s*(?:\/\*[\s\S]*?\*\/)?[A-Za-z$_][A-Za-z0-9$_]*(?:\s*\((?:[^()]+|\([^)]*\))*\))?)+))/gm;
 
 const IMPORT_NAMED_TYPE_RE =
   /(?<=\s|^|;|})import\s*type\s+(?:[\s"']*(?<imports>[\w\t\n\r $*,/{}]+)from\s*)?["']\s*(?<specifier>(?<="\s*)[^"]*[^\s"](?=\s*")|(?<='\s*)[^']*[^\s'](?=\s*'))\s*["'][\s;]*/gm;
@@ -786,8 +786,9 @@ function _getLocations(code: string, label: string) {
 function _parseImportMetaChain(chainString: string): ImportMetaChainItem[] {
   const chain: ImportMetaChainItem[] = [];
 
-  // Match property accesses and method calls (with optional whitespace)
-  const chainRegex = /\s*\.\s*(\w+)(\s*\(([^)]*|\([^)]*\))*\))?/g;
+  // Match property accesses and method calls (with optional whitespace and block comments)
+  const chainRegex =
+    /\s*(?:\/\*[\s\S]*?\*\/)?\.\s*(?:\/\*[\s\S]*?\*\/)?([A-Za-z$_][A-Za-z0-9$_]*)(\s*\(([^)]*|\([^)]*\))*\))?/g;
   let match;
 
   while ((match = chainRegex.exec(chainString)) !== null) {
