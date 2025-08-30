@@ -145,7 +145,7 @@ type ImportMetaChainItem = ImportMetaCallChain | ImportMetaMemberChain;
  * Represents an import.meta expression in an ECMAScript module.
  * Contains position information and parsed chain information for the import.meta occurrence.
  */
-export interface ImportMetaMatch {
+export interface ImportMetaExpression {
   /**
    * Indicates that this is an import.meta expression.
    */
@@ -409,9 +409,9 @@ export function findTypeImports(code: string): TypeImport[] {
 /**
  * Finds all import.meta expressions within the given code string.
  * @param {string} code - The source code to search for import.meta expressions.
- * @returns {ImportMetaMatch[]} An array of {@link ImportMetaMatch} objects representing each import.meta expression found.
+ * @returns {ImportMetaExpression[]} An array of {@link ImportMetaExpression} objects representing each import.meta expression found.
  */
-export function findImportMeta(code: string): ImportMetaMatch[] {
+export function findImportMeta(code: string): ImportMetaExpression[] {
   const matches = matchAll(IMPORT_META_RE, code, { type: "meta" });
   const filtered = _filterStatement(_tryGetLocations(code, "import"), matches);
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { ImportMetaMatch } from "../src";
+import type { ImportMetaExpression } from "../src";
 import {
   findDynamicImports,
   findStaticImports,
@@ -260,7 +260,7 @@ const TypeTests = {
   },
 };
 
-const importMetaTests: Record<string, ImportMetaMatch[]> = {
+const importMetaTests: Record<string, ImportMetaExpression[]> = {
   // Basic member expressions
   "const baseUrl = import.meta.url": [
     {
