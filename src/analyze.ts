@@ -120,13 +120,13 @@ interface ImportMetaPropertyChain {
   type: "property";
 }
 
-interface ImportMetaMethodChain {
+interface ImportMetaCallChain {
   /**
    * The name of the method.
    */
   name: string;
 
-  type: "method";
+  type: "call";
 
   /**
    * The arguments for method calls.
@@ -139,9 +139,7 @@ interface ImportMetaMethodChain {
 /**
  * Represents a property access or method call in an import.meta chain.
  */
-export type ImportMetaChainItem =
-  | ImportMetaMethodChain
-  | ImportMetaPropertyChain;
+export type ImportMetaChainItem = ImportMetaCallChain | ImportMetaPropertyChain;
 
 /**
  * Represents an import.meta expression in an ECMAScript module.
@@ -828,7 +826,7 @@ function _parseImportMetaChain(code: string): ImportMetaChainItem[] {
 
       chain.push({
         name,
-        type: "method",
+        type: "call",
         args: args.length > 0 ? args : [],
       });
       break;

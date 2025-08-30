@@ -314,7 +314,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: "import.meta.resolve()",
       start: 0,
       end: 21,
-      chain: [{ name: "resolve", type: "method", args: [] }],
+      chain: [{ name: "resolve", type: "call", args: [] }],
     },
   ],
   "import.meta.resolve('./module')": [
@@ -323,7 +323,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: "import.meta.resolve('./module')",
       start: 0,
       end: 31,
-      chain: [{ name: "resolve", type: "method", args: ["'./module'"] }],
+      chain: [{ name: "resolve", type: "call", args: ["'./module'"] }],
     },
   ],
   'import.meta.resolve("./module")': [
@@ -332,7 +332,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: 'import.meta.resolve("./module")',
       start: 0,
       end: 31,
-      chain: [{ name: "resolve", type: "method", args: ['"./module"'] }],
+      chain: [{ name: "resolve", type: "call", args: ['"./module"'] }],
     },
   ],
 
@@ -345,7 +345,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       end: 24,
       chain: [
         { name: "foo", type: "property" },
-        { name: "method", type: "method", args: [] },
+        { name: "method", type: "call", args: [] },
       ],
     },
   ],
@@ -357,7 +357,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       end: 31,
       chain: [
         { name: "env", type: "property" },
-        { name: "getValue", type: "method", args: ["'key'"] },
+        { name: "getValue", type: "call", args: ["'key'"] },
       ],
     },
   ],
@@ -376,7 +376,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: "import.meta.resolve(url)",
       start: 29,
       end: 53,
-      chain: [{ name: "resolve", type: "method", args: ["url"] }],
+      chain: [{ name: "resolve", type: "call", args: ["url"] }],
     },
   ],
 
@@ -397,7 +397,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: "import.meta.resolve('./mod')",
       start: 0,
       end: 28,
-      chain: [{ name: "resolve", type: "method", args: ["'./mod'"] }],
+      chain: [{ name: "resolve", type: "call", args: ["'./mod'"] }],
     },
   ],
 
@@ -407,7 +407,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: "import.meta.resolve()",
       start: 0,
       end: 21,
-      chain: [{ name: "resolve", type: "method", args: [] }],
+      chain: [{ name: "resolve", type: "call", args: [] }],
     },
   ],
 };
@@ -463,7 +463,7 @@ importMetaTests[
     chain: [
       {
         name: "resolve",
-        type: "method",
+        type: "call",
         args: ["'./module'", "{ conditions: ['import'] }"],
       },
     ],
