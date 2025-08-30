@@ -402,29 +402,10 @@ export function findImportMeta(code: string): ImportMetaMatch[] {
   const matches = matchAll(IMPORT_META_RE, code, { type: "meta" });
   const filtered = _filterStatement(_tryGetLocations(code, "import"), matches);
 
-  // Parse each match to extract chain information and adjust match boundaries
+  // Parse each match to extract chain information
   return filtered.map((match) => {
     const originalCode = match.code;
     const chain = _parseImportMetaChain(originalCode);
-
-    // Find where the first method call ends using regex (with optional whitespace)
-    const firstMethodPattern =
-      /^import\.meta(?:\s*\.\s*\w+)*?(\s*\.\s*\w+\s*\([^)]*(?:\([^)]*\)[^)]*)*\))/;
-    const methodMatch = originalCode.match(firstMethodPattern);
-
-    if (methodMatch) {
-      // Cut the code at the end of the first method call
-      const methodEndPos = methodMatch[0].length;
-      const adjustedCode = originalCode.slice(0, methodEndPos);
-      const adjustedEnd = match.start + methodEndPos;
-
-      return {
-        ...match,
-        code: adjustedCode,
-        end: adjustedEnd,
-        chain,
-      };
-    }
 
     return {
       ...match,
@@ -829,7 +810,6 @@ function _parseImportMetaChain(code: string): ImportMetaChainItem[] {
         type: "call",
         args: args.length > 0 ? args : [],
       });
-      break;
     } else {
       chain.push({
         name,

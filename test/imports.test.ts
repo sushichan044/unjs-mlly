@@ -362,7 +362,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
     },
   ],
 
-  // multiple statement
+  // multiple statements
   "const url = import.meta.url; import.meta.resolve(url)": [
     {
       type: "meta",
@@ -380,52 +380,27 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
     },
   ],
 
+  // chain calls
+  "import.meta.resolve('./mod').then(console.log)": [
+    {
+      type: "meta",
+      code: "import.meta.resolve('./mod').then(console.log)",
+      start: 0,
+      end: 46,
+      chain: [
+        { name: "resolve", type: "call", args: ["'./mod'"] },
+        { name: "then", type: "call", args: ["console.log"] },
+      ],
+    },
+  ],
+
   // negative cases
   "// import.meta": [],
   "/* import.meta */": [],
   '"import.meta.url"': [],
-
-  // TODO: determine whether to support chained method call
-  // This is highly inappropriate as a user extension for ImportMeta and would encourage unnecessarily complex extensions,
-  // so it should not be supported.
-  //
-  // However, when encountering such statements, I haven't decided whether to
-  // "capture up to the first method call" (current behavior) or "skip completely."
-  "import.meta.resolve('./mod').then(console.log)": [
-    {
-      type: "meta",
-      code: "import.meta.resolve('./mod')",
-      start: 0,
-      end: 28,
-      chain: [{ name: "resolve", type: "call", args: ["'./mod'"] }],
-    },
-  ],
-
-  "import.meta.resolve().catch().finally()": [
-    {
-      type: "meta",
-      code: "import.meta.resolve()",
-      start: 0,
-      end: 21,
-      chain: [{ name: "resolve", type: "call", args: [] }],
-    },
-  ],
 };
 
-// multiline property access
-importMetaTests[
-  `import.meta
-  .url`
-] = [
-  {
-    type: "meta",
-    code: `import.meta
-  .url`,
-    start: 0,
-    end: 18,
-    chain: [{ name: "url", type: "property" }],
-  },
-];
+// multiline chain
 importMetaTests[
   `import.meta
     .env
@@ -441,6 +416,24 @@ importMetaTests[
     chain: [
       { name: "env", type: "property" },
       { name: "NODE_ENV", type: "property" },
+    ],
+  },
+];
+importMetaTests[
+  `import.meta
+    .resolve()
+    .then(console.log)`
+] = [
+  {
+    type: "meta",
+    code: `import.meta
+    .resolve()
+    .then(console.log)`,
+    start: 0,
+    end: 49,
+    chain: [
+      { name: "resolve", type: "call", args: [] },
+      { name: "then", type: "call", args: ["console.log"] },
     ],
   },
 ];
