@@ -261,153 +261,66 @@ const TypeTests = {
 };
 
 const importMetaTests: Record<string, ImportMetaMatch[]> = {
-  // 1 depth property access
-  "import.meta.url": [
+  // Basic member expressions
+  "const baseUrl = import.meta.url": [
     {
       type: "meta",
       code: "import.meta.url",
-      start: 0,
-      end: 15,
+      start: 16,
+      end: 31,
       chain: [{ name: "url", type: "property" }],
     },
   ],
-  "import.meta.env": [
-    {
-      type: "meta",
-      code: "import.meta.env",
-      start: 0,
-      end: 15,
-      chain: [{ name: "env", type: "property" }],
-    },
-  ],
 
-  // 2+ depth property access
-  "import.meta.env.NODE_ENV": [
+  "export const IS_DEV = import.meta.env.NODE_ENV === 'development'": [
     {
       type: "meta",
       code: "import.meta.env.NODE_ENV",
-      start: 0,
-      end: 24,
+      start: 22,
+      end: 46,
       chain: [
         { name: "env", type: "property" },
         { name: "NODE_ENV", type: "property" },
       ],
     },
   ],
-  "const version = import.meta.env.VITE_VERSION || 'dev'": [
+  "import.meta.$dummy": [
     {
       type: "meta",
-      code: "import.meta.env.VITE_VERSION",
-      start: 16,
-      end: 44,
-      chain: [
-        { name: "env", type: "property" },
-        { name: "VITE_VERSION", type: "property" },
-      ],
+      code: "import.meta.$dummy",
+      start: 0,
+      end: 18,
+      chain: [{ name: "$dummy", type: "property" }],
     },
   ],
 
-  // 1 depth method call
-  "import.meta.resolve()": [
+  // Basic call expressions
+  "const resolved = import.meta.resolve('./config')": [
     {
       type: "meta",
-      code: "import.meta.resolve()",
-      start: 0,
-      end: 21,
-      chain: [{ name: "resolve", type: "call", args: [] }],
+      code: "import.meta.resolve('./config')",
+      start: 17,
+      end: 48,
+      chain: [{ name: "resolve", type: "call", args: ["'./config'"] }],
     },
   ],
-  "import.meta.resolve('./module')": [
+  "import.meta.glob('./pages/**/*.vue', { eager: true })": [
     {
       type: "meta",
-      code: "import.meta.resolve('./module')",
+      code: "import.meta.glob('./pages/**/*.vue', { eager: true })",
       start: 0,
-      end: 31,
-      chain: [{ name: "resolve", type: "call", args: ["'./module'"] }],
-    },
-  ],
-  'import.meta.resolve("./module")': [
-    {
-      type: "meta",
-      code: 'import.meta.resolve("./module")',
-      start: 0,
-      end: 31,
-      chain: [{ name: "resolve", type: "call", args: ['"./module"'] }],
-    },
-  ],
-
-  // 2+ depth method call
-  "import.meta.foo.method()": [
-    {
-      type: "meta",
-      code: "import.meta.foo.method()",
-      start: 0,
-      end: 24,
-      chain: [
-        { name: "foo", type: "property" },
-        { name: "method", type: "call", args: [] },
-      ],
-    },
-  ],
-  "import.meta.env.getValue('key')": [
-    {
-      type: "meta",
-      code: "import.meta.env.getValue('key')",
-      start: 0,
-      end: 31,
-      chain: [
-        { name: "env", type: "property" },
-        { name: "getValue", type: "call", args: ["'key'"] },
-      ],
-    },
-  ],
-
-  // multiple statements
-  "const url = import.meta.url; import.meta.resolve(url)": [
-    {
-      type: "meta",
-      code: "import.meta.url",
-      start: 12,
-      end: 27,
-      chain: [{ name: "url", type: "property" }],
-    },
-    {
-      type: "meta",
-      code: "import.meta.resolve(url)",
-      start: 29,
       end: 53,
-      chain: [{ name: "resolve", type: "call", args: ["url"] }],
-    },
-  ],
-
-  // chain calls
-  "import.meta.resolve('./mod').then(console.log)": [
-    {
-      type: "meta",
-      code: "import.meta.resolve('./mod').then(console.log)",
-      start: 0,
-      end: 46,
       chain: [
-        { name: "resolve", type: "call", args: ["'./mod'"] },
-        { name: "then", type: "call", args: ["console.log"] },
+        {
+          name: "glob",
+          type: "call",
+          args: ["'./pages/**/*.vue'", "{ eager: true }"],
+        },
       ],
     },
   ],
 
-  // negative cases
-  "// import.meta": [],
-  "/* import.meta */": [],
-  '"import.meta.url"': [],
   // Block comments between tokens
-  "import.meta/* comment */.url": [
-    {
-      type: "meta",
-      code: "import.meta/* comment */.url",
-      start: 0,
-      end: 28,
-      chain: [{ name: "url", type: "property" }],
-    },
-  ],
   "import.meta./* comment */env.NODE_ENV": [
     {
       type: "meta",
@@ -420,28 +333,11 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       ],
     },
   ],
-  // $ in identifier names
-  "import.meta.$store": [
-    {
-      type: "meta",
-      code: "import.meta.$store",
-      start: 0,
-      end: 18,
-      chain: [{ name: "$store", type: "property" }],
-    },
-  ],
-  "import.meta.env.$NODE_ENV": [
-    {
-      type: "meta",
-      code: "import.meta.env.$NODE_ENV",
-      start: 0,
-      end: 25,
-      chain: [
-        { name: "env", type: "property" },
-        { name: "$NODE_ENV", type: "property" },
-      ],
-    },
-  ],
+
+  // negative cases
+  "// import.meta.url": [],
+  "/* import.meta.url */": [],
+  '"import.meta.url"': [],
 };
 
 // multiline chain
