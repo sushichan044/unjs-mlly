@@ -323,7 +323,7 @@ export const DYNAMIC_IMPORT_RE =
  * @example `import.meta.url`, `import.meta.env`, `import.meta.resolve()`
  */
 export const IMPORT_META_RE =
-  /\bimport\.meta(?:(?:\s*\.\s*\w+(?:\s*\((?:[^()]+|\([^)]*\))*\))?)+)/gm;
+  /\bimport\.meta(?<chain>(?:(?:\s*\.\s*\w+(?:\s*\((?:[^()]+|\([^)]*\))*\))?)+))/gm;
 
 const IMPORT_NAMED_TYPE_RE =
   /(?<=\s|^|;|})import\s*type\s+(?:[\s"']*(?<imports>[\w\t\n\r $*,/{}]+)from\s*)?["']\s*(?<specifier>(?<="\s*)[^"]*[^\s"](?=\s*")|(?<='\s*)[^']*[^\s'](?=\s*'))\s*["'][\s;]*/gm;
@@ -404,8 +404,7 @@ export function findImportMeta(code: string): ImportMetaMatch[] {
 
   // Parse each match to extract chain information
   return filtered.map((match) => {
-    const originalCode = match.code;
-    const chain = _parseImportMetaChain(originalCode);
+    const chain = _parseImportMetaChain(match.chain || "");
 
     return {
       ...match,
@@ -784,17 +783,14 @@ function _getLocations(code: string, label: string) {
   return locations;
 }
 
-function _parseImportMetaChain(code: string): ImportMetaChainItem[] {
+function _parseImportMetaChain(chainString: string): ImportMetaChainItem[] {
   const chain: ImportMetaChainItem[] = [];
-
-  // Remove "import.meta" prefix and parse the rest
-  const remaining = code.replace(/^import\.meta/, "");
 
   // Match property accesses and method calls (with optional whitespace)
   const chainRegex = /\s*\.\s*(\w+)(\s*\(([^)]*|\([^)]*\))*\))?/g;
   let match;
 
-  while ((match = chainRegex.exec(remaining)) !== null) {
+  while ((match = chainRegex.exec(chainString)) !== null) {
     const name = match[1];
     const isMethod = match[2] !== undefined;
 
