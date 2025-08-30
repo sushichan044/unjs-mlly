@@ -169,8 +169,13 @@ export interface ImportMetaMatch {
   /**
    * The parsed chain of property accesses and method calls.
    * @example
-   * - `import.meta.url` → `[{ name: "url", type: "property" }]`
-   * - `import.meta.resolve('./mod')` → `[{ name: "resolve", type: "method", args: ["'./mod'"] }]`
+   * ```ts
+   * // import.meta.url
+   * [{ name: "url", type: "property" }]
+   *
+   * // import.meta.resolve('./mod')
+   * [{ name: "resolve", type: "call", args: ["'./mod'"] }]
+   * ```
    */
   chain: ImportMetaChainItem[];
 }
