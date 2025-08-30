@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
+
+import type { ImportMetaMatch } from "../src";
 import {
   findDynamicImports,
   findStaticImports,
+  findImportMeta,
   parseStaticImport,
   findTypeImports,
   parseTypeImport,
@@ -257,6 +260,216 @@ const TypeTests = {
   },
 };
 
+const importMetaTests: Record<string, ImportMetaMatch[]> = {
+  // 1 depth property access
+  "import.meta.url": [
+    {
+      type: "meta",
+      code: "import.meta.url",
+      start: 0,
+      end: 15,
+      chain: [{ name: "url", type: "property" }],
+    },
+  ],
+  "import.meta.env": [
+    {
+      type: "meta",
+      code: "import.meta.env",
+      start: 0,
+      end: 15,
+      chain: [{ name: "env", type: "property" }],
+    },
+  ],
+
+  // 2+ depth property access
+  "import.meta.env.NODE_ENV": [
+    {
+      type: "meta",
+      code: "import.meta.env.NODE_ENV",
+      start: 0,
+      end: 24,
+      chain: [
+        { name: "env", type: "property" },
+        { name: "NODE_ENV", type: "property" },
+      ],
+    },
+  ],
+  "const version = import.meta.env.VITE_VERSION || 'dev'": [
+    {
+      type: "meta",
+      code: "import.meta.env.VITE_VERSION",
+      start: 16,
+      end: 44,
+      chain: [
+        { name: "env", type: "property" },
+        { name: "VITE_VERSION", type: "property" },
+      ],
+    },
+  ],
+
+  // 1 depth method call
+  "import.meta.resolve()": [
+    {
+      type: "meta",
+      code: "import.meta.resolve()",
+      start: 0,
+      end: 21,
+      chain: [{ name: "resolve", type: "method", args: [] }],
+    },
+  ],
+  "import.meta.resolve('./module')": [
+    {
+      type: "meta",
+      code: "import.meta.resolve('./module')",
+      start: 0,
+      end: 31,
+      chain: [{ name: "resolve", type: "method", args: ["'./module'"] }],
+    },
+  ],
+  'import.meta.resolve("./module")': [
+    {
+      type: "meta",
+      code: 'import.meta.resolve("./module")',
+      start: 0,
+      end: 31,
+      chain: [{ name: "resolve", type: "method", args: ['"./module"'] }],
+    },
+  ],
+
+  // 2+ depth method call
+  "import.meta.foo.method()": [
+    {
+      type: "meta",
+      code: "import.meta.foo.method()",
+      start: 0,
+      end: 24,
+      chain: [
+        { name: "foo", type: "property" },
+        { name: "method", type: "method", args: [] },
+      ],
+    },
+  ],
+  "import.meta.env.getValue('key')": [
+    {
+      type: "meta",
+      code: "import.meta.env.getValue('key')",
+      start: 0,
+      end: 31,
+      chain: [
+        { name: "env", type: "property" },
+        { name: "getValue", type: "method", args: ["'key'"] },
+      ],
+    },
+  ],
+
+  // multiple statement
+  "const url = import.meta.url; import.meta.resolve(url)": [
+    {
+      type: "meta",
+      code: "import.meta.url",
+      start: 12,
+      end: 27,
+      chain: [{ name: "url", type: "property" }],
+    },
+    {
+      type: "meta",
+      code: "import.meta.resolve(url)",
+      start: 29,
+      end: 53,
+      chain: [{ name: "resolve", type: "method", args: ["url"] }],
+    },
+  ],
+
+  // negative cases
+  "// import.meta": [],
+  "/* import.meta */": [],
+  '"import.meta.url"': [],
+
+  // TODO: determine whether to support chained method call
+  // This is highly inappropriate as a user extension for ImportMeta and would encourage unnecessarily complex extensions,
+  // so it should not be supported.
+  //
+  // However, when encountering such statements, I haven't decided whether to
+  // "capture up to the first method call" (current behavior) or "skip completely."
+  "import.meta.resolve('./mod').then(console.log)": [
+    {
+      type: "meta",
+      code: "import.meta.resolve('./mod')",
+      start: 0,
+      end: 28,
+      chain: [{ name: "resolve", type: "method", args: ["'./mod'"] }],
+    },
+  ],
+
+  "import.meta.resolve().catch().finally()": [
+    {
+      type: "meta",
+      code: "import.meta.resolve()",
+      start: 0,
+      end: 21,
+      chain: [{ name: "resolve", type: "method", args: [] }],
+    },
+  ],
+};
+
+// multiline property access
+importMetaTests[
+  `import.meta
+  .url`
+] = [
+  {
+    type: "meta",
+    code: `import.meta
+  .url`,
+    start: 0,
+    end: 18,
+    chain: [{ name: "url", type: "property" }],
+  },
+];
+importMetaTests[
+  `import.meta
+    .env
+    .NODE_ENV`
+] = [
+  {
+    type: "meta",
+    code: `import.meta
+    .env
+    .NODE_ENV`,
+    start: 0,
+    end: 34,
+    chain: [
+      { name: "env", type: "property" },
+      { name: "NODE_ENV", type: "property" },
+    ],
+  },
+];
+
+// multiline args
+importMetaTests[
+  `import.meta.resolve(
+  './module',
+  { conditions: ['import'] }
+)`
+] = [
+  {
+    type: "meta",
+    code: `import.meta.resolve(
+  './module',
+  { conditions: ['import'] }
+)`,
+    start: 0,
+    end: 65,
+    chain: [
+      {
+        name: "resolve",
+        type: "method",
+        args: ["'./module'", "{ conditions: ['import'] }"],
+      },
+    ],
+  },
+];
+
 describe("findStaticImports", () => {
   for (const [input, _results] of Object.entries(staticTests)) {
     it(input.replace(/\n/g, String.raw`\n`), () => {
@@ -321,6 +534,23 @@ describe("findTypeImports", () => {
         if (test.namespacedImport) {
           expect(parsed.namespacedImport).to.eql(test.namespacedImport);
         }
+      }
+    });
+  }
+});
+
+describe("findImportMeta", () => {
+  for (const [input, expected] of Object.entries(importMetaTests)) {
+    it(input.replace(/\n/g, String.raw`\n`), () => {
+      const matches = findImportMeta(input);
+      expect(matches.length).toEqual(expected.length);
+      for (const [index, test] of expected.entries()) {
+        const match = matches[index];
+        expect(match.type).to.equal("meta");
+        expect(match.code).to.equal(test.code);
+        expect(match.start).to.equal(test.start);
+        expect(match.end).to.equal(test.end);
+        expect(match.chain).to.eql(test.chain);
       }
     });
   }

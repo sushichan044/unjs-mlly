@@ -111,6 +111,72 @@ export interface TypeImport extends Omit<ESMImport, "type"> {
   specifier: string;
 }
 
+interface ImportMetaPropertyChain {
+  /**
+   * The name of the property.
+   */
+  name: string;
+
+  type: "property";
+}
+
+interface ImportMetaMethodChain {
+  /**
+   * The name of the method.
+   */
+  name: string;
+
+  type: "method";
+
+  /**
+   * The arguments for method calls.
+   *
+   * Empty if no arguments provided.
+   */
+  args: string[];
+}
+
+/**
+ * Represents a property access or method call in an import.meta chain.
+ */
+export type ImportMetaChainItem =
+  | ImportMetaMethodChain
+  | ImportMetaPropertyChain;
+
+/**
+ * Represents an import.meta expression in an ECMAScript module.
+ * Contains position information and parsed chain information for the import.meta occurrence.
+ */
+export interface ImportMetaMatch {
+  /**
+   * Indicates that this is an import.meta expression.
+   */
+  type: "meta";
+
+  /**
+   * The full import.meta expression code snippet as a string.
+   */
+  code: string;
+
+  /**
+   * The starting position (index) of the import.meta expression in the source code.
+   */
+  start: number;
+
+  /**
+   * The end position (index) of the import.meta expression in the source code.
+   */
+  end: number;
+
+  /**
+   * The parsed chain of property accesses and method calls.
+   * @example
+   * - `import.meta.url` → `[{ name: "url", type: "property" }]`
+   * - `import.meta.resolve('./mod')` → `[{ name: "resolve", type: "method", args: ["'./mod'"] }]`
+   */
+  chain: ImportMetaChainItem[];
+}
+
 /**
  * Represents a general structure for ECMAScript module exports.
  */
@@ -251,6 +317,16 @@ export const ESM_STATIC_IMPORT_RE =
  */
 export const DYNAMIC_IMPORT_RE =
   /import\s*\((?<expression>(?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*)\)/gm;
+
+/**
+ * Regular expression to match import.meta expressions in JavaScript/TypeScript code.
+ * Supports multiline property access with whitespace between dots and property names.
+ * Captures the entire chain but stops at first method call in post-processing.
+ * @example `import.meta.url`, `import.meta.env`, `import.meta.resolve()`
+ */
+export const IMPORT_META_RE =
+  /\bimport\.meta(?:(?:\s*\.\s*\w+(?:\s*\((?:[^()]+|\([^)]*\))*\))?)+)/gm;
+
 const IMPORT_NAMED_TYPE_RE =
   /(?<=\s|^|;|})import\s*type\s+(?:[\s"']*(?<imports>[\w\t\n\r $*,/{}]+)from\s*)?["']\s*(?<specifier>(?<="\s*)[^"]*[^\s"](?=\s*")|(?<='\s*)[^']*[^\s'](?=\s*'))\s*["'][\s;]*/gm;
 
@@ -317,6 +393,46 @@ export function findTypeImports(code: string): TypeImport[] {
       (match) => /[^A-Za-z]type\s/.test(match.imports),
     ),
   ];
+}
+
+/**
+ * Finds all import.meta expressions within the given code string.
+ * @param {string} code - The source code to search for import.meta expressions.
+ * @returns {ImportMetaMatch[]} An array of {@link ImportMetaMatch} objects representing each import.meta expression found.
+ */
+export function findImportMeta(code: string): ImportMetaMatch[] {
+  const matches = matchAll(IMPORT_META_RE, code, { type: "meta" });
+  const filtered = _filterStatement(_tryGetLocations(code, "import"), matches);
+
+  // Parse each match to extract chain information and adjust match boundaries
+  return filtered.map((match) => {
+    const originalCode = match.code;
+    const chain = _parseImportMetaChain(originalCode);
+
+    // Find where the first method call ends using regex (with optional whitespace)
+    const firstMethodPattern =
+      /^import\.meta(?:\s*\.\s*\w+)*?(\s*\.\s*\w+\s*\([^)]*(?:\([^)]*\)[^)]*)*\))/;
+    const methodMatch = originalCode.match(firstMethodPattern);
+
+    if (methodMatch) {
+      // Cut the code at the end of the first method call
+      const methodEndPos = methodMatch[0].length;
+      const adjustedCode = originalCode.slice(0, methodEndPos);
+      const adjustedEnd = match.start + methodEndPos;
+
+      return {
+        ...match,
+        code: adjustedCode,
+        end: adjustedEnd,
+        chain,
+      };
+    }
+
+    return {
+      ...match,
+      chain,
+    };
+  });
 }
 
 /**
@@ -687,4 +803,42 @@ function _getLocations(code: string, label: string) {
     }
   }
   return locations;
+}
+
+function _parseImportMetaChain(code: string): ImportMetaChainItem[] {
+  const chain: ImportMetaChainItem[] = [];
+
+  // Remove "import.meta" prefix and parse the rest
+  const remaining = code.replace(/^import\.meta/, "");
+
+  // Match property accesses and method calls (with optional whitespace)
+  const chainRegex = /\s*\.\s*(\w+)(\s*\(([^)]*|\([^)]*\))*\))?/g;
+  let match;
+
+  while ((match = chainRegex.exec(remaining)) !== null) {
+    const name = match[1];
+    const isMethod = match[2] !== undefined;
+
+    if (isMethod) {
+      const argsString = match[3] || "";
+      const args = argsString
+        .split(",")
+        .map((arg) => arg.trim())
+        .filter((arg) => arg.length > 0);
+
+      chain.push({
+        name,
+        type: "method",
+        args: args.length > 0 ? args : [],
+      });
+      break;
+    } else {
+      chain.push({
+        name,
+        type: "property",
+      });
+    }
+  }
+
+  return chain;
 }
