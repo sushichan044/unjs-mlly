@@ -268,7 +268,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: "import.meta.url",
       start: 16,
       end: 31,
-      chain: [{ name: "url", type: "property" }],
+      chain: [{ name: "url", type: "member" }],
     },
   ],
 
@@ -279,8 +279,8 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       start: 22,
       end: 46,
       chain: [
-        { name: "env", type: "property" },
-        { name: "NODE_ENV", type: "property" },
+        { name: "env", type: "member" },
+        { name: "NODE_ENV", type: "member" },
       ],
     },
   ],
@@ -290,7 +290,7 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       code: "import.meta.$dummy",
       start: 0,
       end: 18,
-      chain: [{ name: "$dummy", type: "property" }],
+      chain: [{ name: "$dummy", type: "member" }],
     },
   ],
 
@@ -328,8 +328,8 @@ const importMetaTests: Record<string, ImportMetaMatch[]> = {
       start: 0,
       end: 37,
       chain: [
-        { name: "env", type: "property" },
-        { name: "NODE_ENV", type: "property" },
+        { name: "env", type: "member" },
+        { name: "NODE_ENV", type: "member" },
       ],
     },
   ],
@@ -354,8 +354,8 @@ importMetaTests[
     start: 0,
     end: 34,
     chain: [
-      { name: "env", type: "property" },
-      { name: "NODE_ENV", type: "property" },
+      { name: "env", type: "member" },
+      { name: "NODE_ENV", type: "member" },
     ],
   },
 ];

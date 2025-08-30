@@ -111,13 +111,13 @@ export interface TypeImport extends Omit<ESMImport, "type"> {
   specifier: string;
 }
 
-interface ImportMetaPropertyChain {
+interface ImportMetaMemberChain {
   /**
-   * The name of the property.
+   * The name of the member.
    */
   name: string;
 
-  type: "property";
+  type: "member";
 }
 
 interface ImportMetaCallChain {
@@ -137,9 +137,9 @@ interface ImportMetaCallChain {
 }
 
 /**
- * Represents a property access or method call in an import.meta chain.
+ * Represents a member access or method call in an import.meta chain.
  */
-export type ImportMetaChainItem = ImportMetaCallChain | ImportMetaPropertyChain;
+export type ImportMetaChainItem = ImportMetaCallChain | ImportMetaMemberChain;
 
 /**
  * Represents an import.meta expression in an ECMAScript module.
@@ -167,11 +167,11 @@ export interface ImportMetaMatch {
   end: number;
 
   /**
-   * The parsed chain of property accesses and method calls.
+   * The parsed chain of member accesses and method calls.
    * @example
    * ```ts
    * // import.meta.url
-   * [{ name: "url", type: "property" }]
+   * [{ name: "url", type: "member" }]
    *
    * // import.meta.resolve('./mod')
    * [{ name: "resolve", type: "call", args: ["'./mod'"] }]
@@ -323,16 +323,16 @@ export const DYNAMIC_IMPORT_RE =
 
 /**
  * Regular expression to match import.meta expressions in JavaScript/TypeScript code.
- * Supports multiline property access with whitespace and optional block comments between dots and property names.
- * Captures the full property chain (including nested accesses and calls) while allowing optional block comments between tokens.
+ * Supports multiline member access with whitespace and optional block comments between dots and member names.
+ * Captures the full member chain (including nested accesses and calls) while allowing optional block comments between tokens.
  * @example 'import.meta.url', 'import.meta.env', 'import.meta.resolve()', 'import . meta . url' with block comments
  */
 export const IMPORT_META_RE =
   /\bimport\.meta(?<chain>(?:(?:\s*(?:\/\*[\s\S]*?\*\/)?\.\s*(?:\/\*[\s\S]*?\*\/)?[A-Za-z$_][A-Za-z0-9$_]*(?:\s*\((?:[^()]+|\([^)]*\))*\))?)+))/gm;
 
 /**
- * Regular expression to match property accesses and method calls within import.meta chains.
- * Supports optional whitespace and block comments between dots and property names.
+ * Regular expression to match member accesses and method calls within import.meta chains.
+ * Supports optional whitespace and block comments between dots and member names.
  * @example '.url', '.resolve()', '. resolve ( arg )'
  */
 const IMPORT_META_CHAIN_RE =
@@ -819,7 +819,7 @@ function _parseImportMetaChain(chainString: string): ImportMetaChainItem[] {
     } else {
       chain.push({
         name,
-        type: "property",
+        type: "member",
       });
     }
   }
