@@ -139,7 +139,7 @@ interface ImportMetaCallChain {
 /**
  * Represents a member access or method call in an import.meta chain.
  */
-export type ImportMetaChainItem = ImportMetaCallChain | ImportMetaMemberChain;
+type ImportMetaChainItem = ImportMetaCallChain | ImportMetaMemberChain;
 
 /**
  * Represents an import.meta expression in an ECMAScript module.
